@@ -8,8 +8,6 @@ import { useRoute } from "@react-navigation/native";
 const UserDetailsScreen = ({ }) => {
     const route = useRoute();
     const item = route.params.item
-
-    console.log('-------', route.params.item)
     return (
         <ScreenContainer backgroundColor={COLORS.SCREEN_BACKGROUND}>
             <View style={styles.container}>

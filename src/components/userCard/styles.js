@@ -8,11 +8,12 @@ const styles = StyleSheet.create({
         boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
         marginVertical: 10,
         backgroundColor: COLORS.WHITE,
-        paddingHorizontal: 10
+        paddingHorizontal: 15
     },
     contentView: {
         flexDirection: 'row',
-        alignItems: 'center'
+        alignItems: 'center',
+        paddingVertical : 10
     }
 });
 

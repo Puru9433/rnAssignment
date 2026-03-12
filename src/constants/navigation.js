@@ -1,8 +1,8 @@
 export default {
     APP: {
         STACKS: {
-            HOME_STACK: 'App-HomeStack',
-            PROFILE_STACK: 'App-ProfileStack',
+            HOME_STACK: 'Home',
+            PROFILE_STACK: 'Profile',
         },
         HOME: {
             HOME_SCREEN: 'App-HomeScreen',

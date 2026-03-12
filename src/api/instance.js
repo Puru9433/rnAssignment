@@ -32,8 +32,9 @@ instance.interceptors.request.use(
 instance.interceptors.response.use(
     response => response,
     error => {
+        console.log('ERROR', error)
         if (error) {
-            errorToast(error?.response?.message || 'Something went wrong')
+            errorToast(error?.response?.message || error?.message || 'Something went wrong')
         }
         //Here we can set error configuration as we need per required like 401 to logout the user etc.
         return Promise.reject(error);

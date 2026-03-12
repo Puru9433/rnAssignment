@@ -1,6 +1,6 @@
 import { ActivityIndicator, FlatList, RefreshControl, TextInput, View } from "react-native";
 import ScreenConatiner from "../../../components/common/screenContainer";
-import React, { use, useCallback, useEffect, useState } from "react";
+import React, { use, useCallback, useEffect, useMemo, useState } from "react";
 import { getUsersData } from "../../../api/app";
 import { debounce } from "lodash";
 import styles from './styles'
@@ -10,124 +10,11 @@ import { useNavigation } from "@react-navigation/native";
 import { COLORS, NAVIGATION, STRINGS } from "../../../constants";
 import { CommonTextInput } from "../../../components/common";
 
-const users = [
-    {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        phone: "+1 555-123-4567",
-        address: {
-            street: "123 Main St",
-            suite: "Apt 101",
-            city: "New York",
-            zipcode: "10001"
-        }
-    },
-    {
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        phone: "+1 555-987-6543",
-        address: {
-            street: "456 Park Ave",
-            suite: "Suite 210",
-            city: "Los Angeles",
-            zipcode: "90001"
-        }
-    },
-    {
-        name: "Michael Brown",
-        email: "michael.brown@example.com",
-        phone: "+1 555-246-8100",
-        address: {
-            street: "789 Oak Street",
-            suite: "Apt 12B",
-            city: "Chicago",
-            zipcode: "60601"
-        }
-    },
-    {
-        name: "Emily Johnson",
-        email: "emily.johnson@example.com",
-        phone: "+1 555-369-1212",
-        address: {
-            street: "321 Pine Rd",
-            suite: "Suite 5A",
-            city: "Houston",
-            zipcode: "77001"
-        }
-    },
-    {
-        name: "David Wilson",
-        email: "david.wilson@example.com",
-        phone: "+1 555-741-8520",
-        address: {
-            street: "654 Maple Ave",
-            suite: "Apt 9",
-            city: "Miami",
-            zipcode: "33101"
-        }
-    },
-    {
-        name: "John Doe",
-        email: "john.doe@example.com",
-        phone: "+1 555-123-4567",
-        address: {
-            street: "123 Main St",
-            suite: "Apt 101",
-            city: "New York",
-            zipcode: "10001"
-        }
-    },
-    {
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        phone: "+1 555-987-6543",
-        address: {
-            street: "456 Park Ave",
-            suite: "Suite 210",
-            city: "Los Angeles",
-            zipcode: "90001"
-        }
-    },
-    {
-        name: "Michael Brown",
-        email: "michael.brown@example.com",
-        phone: "+1 555-246-8100",
-        address: {
-            street: "789 Oak Street",
-            suite: "Apt 12B",
-            city: "Chicago",
-            zipcode: "60601"
-        }
-    },
-    {
-        name: "Emily Johnson",
-        email: "emily.johnson@example.com",
-        phone: "+1 555-369-1212",
-        address: {
-            street: "321 Pine Rd",
-            suite: "Suite 5A",
-            city: "Houston",
-            zipcode: "77001"
-        }
-    },
-    {
-        name: "David Wilson",
-        email: "david.wilson@example.com",
-        phone: "+1 555-741-8520",
-        address: {
-            street: "654 Maple Ave",
-            suite: "Apt 9",
-            city: "Miami",
-            zipcode: "33101"
-        }
-    }
-];
-
 
 const HomeScreen = () => {
     const navigation = useNavigation();
     const [userData, setUserData] = useState([]);
-    const [pageNo, setpageNo] = useState(1);
+    const [pageNo, setPageNo] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
@@ -141,16 +28,15 @@ const HomeScreen = () => {
     }, [])
 
     const getUsers = async (page, isRefresh = false) => {
-        if (isLoading) return;
+        if (isLoading && !isRefresh) return;
         setIsLoading(true);
         const params = {
-            page,
-            limit: LIMIT
+            _page : page,
+            _limit: LIMIT
         }
         try {
             const res = await getUsersData(params);
-            console.log('RESPONSE', res)
-            console.log('res', res);
+            console.log('---', res)
             if (res) {
                 setUserData(prev => isRefresh ? res : [...prev, ...res]);
                 setHasMore(res.length === LIMIT);
@@ -165,7 +51,7 @@ const HomeScreen = () => {
     };
 
     const onLoadMore = () => {
-        if (hasMore && !isLoading && searchText === '') {
+        if (hasMore && !isLoading && searchText === '' && userData.length >= LIMIT) {
             const nextPage = pageNo + 1;
             setPageNo(nextPage);
             getUsers(nextPage);
@@ -174,12 +60,13 @@ const HomeScreen = () => {
 
     const onRefresh = () => {
         setIsRefreshing(true);
-        setpageNo(1);
+        setPageNo(1);
         setSearchText('');
         getUsers(1, true)
     };
 
     const renderEmptyComponent = () => {
+        if (isLoading) return null;
         return (
             <View style={styles.emptyView}>
                 <CommonTextInput size={22} color={COLORS.BLACK} fontWeight={700}>{STRINGS.HOME_SCREEN.NO_USER_FOUND}</CommonTextInput>
@@ -197,8 +84,8 @@ const HomeScreen = () => {
     }, [toUserDetailsScreen]);
 
     const renderFooter = () => {
-        if (isLoading && page > 1) {
-            <ActivityIndicator style={{ margin: 20 }} />
+        if (isLoading && pageNo > 1) {
+            return <ActivityIndicator color={COLORS.PRIMARY} size='small' style={{ margin: 20 }} />
         }
     }
 
@@ -206,9 +93,8 @@ const HomeScreen = () => {
         if (!searchText) return userData;
 
         const query = searchText.toLowerCase();
-        return userData.filter(user =>
-            user.name?.toLowerCase().includes(query) ||
-            user.email?.toLowerCase().includes(query)
+        return userData?.filter(user =>
+            user?.name?.toLowerCase()?.includes(query)
         );
     }, [userData, searchText]);
 
@@ -221,7 +107,7 @@ const HomeScreen = () => {
     }, [navigation])
 
     return (
-        <ScreenConatiner backgroundColor="#faf5f5">
+        <ScreenConatiner backgroundColor={COLORS.SCREEN_BACKGROUND}>
             <View style={styles.container}>
                 <Header title={STRINGS.HOME_SCREEN.HEADER_TEXT} />
                 <TextInput
@@ -229,7 +115,7 @@ const HomeScreen = () => {
                     onChangeText={handleSeacrh}
                     placeholder={STRINGS.HOME_SCREEN.SEARCH_USER}
                 />
-                {!isLoading ?
+                {isLoading && pageNo === 1 && userData.length === 0 ?
                     <View style={styles.activityIndicatorView}>
                         <ActivityIndicator color={COLORS.PRIMARY} size='large' />
                     </View> :
@@ -249,6 +135,7 @@ const HomeScreen = () => {
                         }
                         initialNumToRender={5}
                         onEndReached={onLoadMore}
+                        onEndReachedThreshold={0.3}
                         keyExtractor={item => item?.id}
                         ListFooterComponent={renderFooter}
                     />}
